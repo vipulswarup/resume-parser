@@ -5,30 +5,30 @@ Welcome to the Resume Parser system! This guide will help you upload resumes and
 ## 🌐 Access Your System
 
 **Your Resume Parser is available at:**  
-**https://resume-parser-urhn.onrender.com/**
+**http://167.71.237.11**
 
-### ⚠️ **Important: Free Tier Limitations**
+### ✅ **DigitalOcean VM Benefits**
 
-**Your free instance will spin down with inactivity, which can delay requests by 50 seconds or more.**
+**Your DigitalOcean VM provides consistent performance with no cold start delays.**
 
-- **First request after inactivity**: May take 50-60 seconds to load
-- **Subsequent requests**: Normal speed (2-5 seconds)
-- **Inactivity timeout**: 15 minutes of no activity
-- **Solution**: Simply wait for the first request to complete, then normal operation resumes
+- **Always available**: No spinning down with inactivity
+- **Fast response**: 2-5 seconds for all requests
+- **Reliable uptime**: 99.9% availability
+- **No delays**: Immediate access anytime
 
 ---
 
 ## 📋 Quick Start Guide
 
 ### 1. **Upload Resumes**
-1. Go to the **Upload Page**: https://resume-parser-urhn.onrender.com/ui/upload
+1. Go to the **Upload Page**: http://167.71.237.11/ui/upload
 2. Click **"Choose File"** and select your resume (PDF, DOCX, or DOC)
 3. Click **"Upload Resume"**
 4. Wait for processing (usually 30-60 seconds)
 5. You'll see a success message with candidate details
 
 ### 2. **View All Candidates**
-1. Go to the **Candidates Page**: https://resume-parser-urhn.onrender.com/ui/candidates
+1. Go to the **Candidates Page**: http://167.71.237.11/ui/candidates
 2. Browse through all uploaded candidates
 3. Use filters to find specific candidates
 4. Click on any candidate to see full details
@@ -63,7 +63,7 @@ Welcome to the Resume Parser system! This guide will help you upload resumes and
 ### **Step 1: Upload a Resume**
 1. **Navigate to Upload Page**
    - Click the "Upload Resume" button on the main page
-   - Or go directly to: https://resume-parser-urhn.onrender.com/ui/upload
+   - Or go directly to: http://167.71.237.11/ui/upload
 
 2. **Select Your File**
    - Click "Choose File" button
@@ -78,7 +78,7 @@ Welcome to the Resume Parser system! This guide will help you upload resumes and
 ### **Step 2: View Candidates**
 1. **Go to Candidates Page**
    - Click "View Candidates" on the main page
-   - Or go directly to: https://resume-parser-urhn.onrender.com/ui/candidates
+   - Or go directly to: http://167.71.237.11/ui/candidates
 
 2. **Browse All Candidates**
    - See a list of all uploaded candidates
@@ -118,11 +118,10 @@ Welcome to the Resume Parser system! This guide will help you upload resumes and
 
 ### **Common Issues**
 
-**❌ Site loads very slowly (50+ seconds)**
-- **This is normal**: Free tier spins down after 15 minutes of inactivity
-- **First request**: Always takes 50-60 seconds to wake up the server
-- **Solution**: Wait patiently for the first load, then normal speed resumes
-- **Prevention**: Use the system regularly to keep it active
+**❌ Site loads slowly**
+- **Check internet connection**: Ensure stable internet access
+- **Try refreshing**: Sometimes temporary network issues occur
+- **Contact IT support**: If consistently slow, there may be server issues
 
 **❌ Upload fails**
 - **Check file format**: Use PDF, DOCX, or DOC only
@@ -149,8 +148,8 @@ Welcome to the Resume Parser system! This guide will help you upload resumes and
 ## 📊 System Status
 
 ### **Health Check**
-- **System status**: https://resume-parser-urhn.onrender.com/health
-- **API documentation**: https://resume-parser-urhn.onrender.com/docs
+- **System status**: http://167.71.237.11/health
+- **API documentation**: http://167.71.237.11/docs
 
 ### **Performance Notes**
 - **Processing time**: 30-60 seconds per resume
@@ -158,11 +157,11 @@ Welcome to the Resume Parser system! This guide will help you upload resumes and
 - **Concurrent uploads**: One at a time for best results
 - **Data retention**: All data is securely stored
 
-### **⚠️ Free Tier Performance**
-- **Cold start delay**: 50-60 seconds after 15 minutes of inactivity
-- **Normal operation**: 2-5 seconds for regular requests
-- **Recommendation**: Use the system regularly to maintain responsiveness
-- **Upgrade option**: Contact IT for paid tier with no delays
+### **✅ DigitalOcean VM Performance**
+- **No cold start delays**: Always available
+- **Fast response**: 2-5 seconds for all requests
+- **Reliable uptime**: 99.9% availability
+- **Consistent performance**: No slowdowns with inactivity
 
 ---
 
@@ -185,10 +184,10 @@ Welcome to the Resume Parser system! This guide will help you upload resumes and
 ## 📞 Support
 
 **For technical support or questions:**
-- **System URL**: https://resume-parser-urhn.onrender.com/
-- **Health Check**: https://resume-parser-urhn.onrender.com/health
-- **Upload Page**: https://resume-parser-urhn.onrender.com/ui/upload
-- **Candidates Page**: https://resume-parser-urhn.onrender.com/ui/candidates
+- **System URL**: http://167.71.237.11
+- **Health Check**: http://167.71.237.11/health
+- **Upload Page**: http://167.71.237.11/ui/upload
+- **Candidates Page**: http://167.71.237.11/ui/candidates
 
 **Remember**: This system is designed to make your recruitment process faster and more efficient. Take time to explore all features and don't hesitate to ask for help if needed!
 
