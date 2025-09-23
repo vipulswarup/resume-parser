@@ -12,12 +12,22 @@ try:
 except ImportError:
     groq_client = None
 
-# --- OpenAI client (fallback) ---
-try:
-    from openai import OpenAI
-    openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-except ImportError:
-    openai_client = None
+# --- OpenAI client (fallback) - lazy initialization ---
+openai_client = None
+
+def get_openai_client():
+    """Get OpenAI client with lazy initialization"""
+    global openai_client
+    if openai_client is None:
+        try:
+            from openai import OpenAI
+            openai_api_key = os.getenv("OPENAI_API_KEY")
+            if openai_api_key:
+                openai_client = OpenAI(api_key=openai_api_key)
+        except (ImportError, Exception) as e:
+            print(f"OpenAI client initialization failed: {e}")
+            openai_client = None
+    return openai_client
 
 
 PROMPT_TEMPLATE = """
@@ -78,7 +88,11 @@ def _call_groq(prompt: str, model: str) -> dict:
 
 @retry(wait=wait_exponential(min=1, max=10), stop=stop_after_attempt(3))
 def _call_openai(prompt: str) -> dict:
-    resp = openai_client.chat.completions.create(
+    client = get_openai_client()
+    if not client:
+        raise Exception("OpenAI client not available")
+    
+    resp = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[{"role": "user", "content": prompt[:6000]}],
         temperature=0,
@@ -106,7 +120,7 @@ def parse_with_llm(resume_text: str) -> dict:
         print(f"[WARN] Groq 70B failed: {e}")
 
     try:
-        if openai_client:
+        if get_openai_client():
             return _call_openai(prompt)
     except Exception as e:
         print(f"[ERROR] OpenAI failed: {e}")
