@@ -38,8 +38,15 @@ echo "📥 Cloning repository..."
 # Copy files from current directory to app directory
 echo "📋 Copying application files..."
 CURRENT_DIR=$(pwd)
-cp -r $CURRENT_DIR/* $APP_DIR/
+# Copy all files and directories
+cp -r $CURRENT_DIR/* $APP_DIR/ 2>/dev/null || true
+# Copy hidden files (like .env)
 cp -r $CURRENT_DIR/.* $APP_DIR/ 2>/dev/null || true
+# Ensure we have the requirements.txt file
+if [ ! -f "$APP_DIR/requirements.txt" ]; then
+    echo "⚠️  requirements.txt not found, copying from current directory..."
+    cp $CURRENT_DIR/requirements.txt $APP_DIR/
+fi
 
 # Set up PostgreSQL database
 echo "🗄️  Setting up PostgreSQL database..."
