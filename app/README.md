@@ -44,6 +44,9 @@ The system also provides a **web UI** (via FastAPI + Jinja2) for internal users 
   - Security event logging.
   - Performance monitoring and statistics.
   - Automatic log cleanup and rotation.
+  - **S3 log storage** with batch upload and centralized logging.
+  - **Log rotation to S3** with automatic archival.
+  - **S3 log cleanup** with configurable retention periods.
 
 ### 3. Working Test Cases
 - ✅ File upload works via API and UI.  
@@ -194,6 +197,9 @@ resume-parser/
 #### **Log Management**
 - `POST /logs/cleanup` - Clean up old logs (retention_days param)
 - `POST /logs/rotate` - Rotate current logs to archives
+- `GET /logs/s3` - Get S3 log statistics and recent logs
+- `POST /logs/s3/cleanup` - Clean up old S3 logs
+- `POST /logs/s3/upload` - Upload current logs to S3
 
 ### Filtering Parameters (Candidates Page)
 - `search` - Search by candidate name

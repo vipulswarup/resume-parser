@@ -13,6 +13,7 @@ from app.s3utils import upload_bytes
 from app.excel_export import export_candidates_to_excel, get_export_filename
 from app.template_generator import generate_candidate_template
 from app.logging_config import setup_logging, log_processing_event, log_llm_usage, log_parsing_quality, log_access_event, log_security_event, cleanup_old_logs, rotate_logs, get_log_stats
+from app.s3_log_handler import S3LogManager
 
 # For text extraction + parsing
 from app.text_extract import extract_text
@@ -25,8 +26,17 @@ app = FastAPI()
 # Setup templates folder
 templates = Jinja2Templates(directory="app/templates")
 
-# Setup logging
-loggers = setup_logging()
+# Setup logging with S3 support
+import os
+s3_bucket = os.getenv('S3_LOG_BUCKET', os.getenv('S3_BUCKET'))
+s3_log_prefix = os.getenv('S3_LOG_PREFIX', 'logs')
+enable_s3_logging = os.getenv('ENABLE_S3_LOGGING', 'true').lower() == 'true'
+
+loggers = setup_logging(
+    s3_bucket=s3_bucket,
+    s3_log_prefix=s3_log_prefix,
+    enable_s3_logging=enable_s3_logging
+)
 
 # Middleware for access logging
 @app.middleware("http")
@@ -530,13 +540,18 @@ async def cleanup_logs(retention_days: int = Query(180, description="Number of d
         return {"error": f"Log cleanup failed: {str(e)}"}
 
 @app.post("/logs/rotate")
-async def rotate_log_files():
+async def rotate_log_files(upload_to_s3: bool = Query(True, description="Upload rotated logs to S3")):
     """Rotate current log files to archives"""
     try:
-        result = rotate_logs()
+        result = rotate_logs(
+            s3_bucket=s3_bucket,
+            s3_log_prefix=s3_log_prefix,
+            upload_to_s3=upload_to_s3
+        )
         return {
             "message": "Log rotation completed",
-            "rotated_files": result["rotated_files"]
+            "rotated_files": result["rotated_files"],
+            "s3_uploaded": result["s3_uploaded"]
         }
     except Exception as e:
         return {"error": f"Log rotation failed: {str(e)}"}
@@ -548,6 +563,67 @@ async def get_log_statistics():
         return get_log_stats()
     except Exception as e:
         return {"error": f"Unable to get log stats: {str(e)}"}
+
+@app.get("/logs/s3")
+async def get_s3_logs(limit: int = Query(50, description="Number of S3 log entries to retrieve")):
+    """Get S3 log statistics and recent logs"""
+    try:
+        if not s3_bucket:
+            return {"error": "S3 logging not configured"}
+        
+        s3_manager = S3LogManager(s3_bucket, s3_log_prefix)
+        stats = s3_manager.get_s3_log_stats()
+        logs = s3_manager.list_s3_logs()
+        
+        # Get recent logs
+        recent_logs = sorted(logs, key=lambda x: x['last_modified'], reverse=True)[:limit]
+        
+        return {
+            "stats": stats,
+            "recent_logs": recent_logs,
+            "bucket": s3_bucket,
+            "prefix": s3_log_prefix
+        }
+    except Exception as e:
+        return {"error": f"Unable to get S3 log stats: {str(e)}"}
+
+@app.post("/logs/s3/cleanup")
+async def cleanup_s3_logs(retention_days: int = Query(180, description="Number of days to retain S3 logs")):
+    """Clean up old S3 log files"""
+    try:
+        if not s3_bucket:
+            return {"error": "S3 logging not configured"}
+        
+        s3_manager = S3LogManager(s3_bucket, s3_log_prefix)
+        result = s3_manager.cleanup_old_s3_logs(retention_days)
+        
+        return {
+            "message": f"S3 log cleanup completed",
+            "deleted_files": result.get("deleted_files", []),
+            "files_count": result.get("files_count", 0),
+            "size_freed_mb": result.get("size_freed_mb", 0)
+        }
+    except Exception as e:
+        return {"error": f"S3 log cleanup failed: {str(e)}"}
+
+@app.post("/logs/s3/upload")
+async def upload_logs_to_s3():
+    """Upload current log files to S3"""
+    try:
+        if not s3_bucket:
+            return {"error": "S3 logging not configured"}
+        
+        s3_manager = S3LogManager(s3_bucket, s3_log_prefix)
+        result = s3_manager.upload_log_directory("logs")
+        
+        return {
+            "message": "Log upload to S3 completed",
+            "uploaded_files": result.get("uploaded", []),
+            "failed_files": result.get("failed", []),
+            "total_size_mb": round(result.get("total_size", 0) / 1024 / 1024, 2)
+        }
+    except Exception as e:
+        return {"error": f"Log upload to S3 failed: {str(e)}"}
 
 
 # Add import for os at the top

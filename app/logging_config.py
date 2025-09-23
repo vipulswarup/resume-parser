@@ -4,9 +4,10 @@ from datetime import datetime, timedelta
 from pathlib import Path
 import glob
 import shutil
+from app.s3_log_handler import S3LogHandler, S3LogManager
 
-def setup_logging():
-    """Setup comprehensive logging configuration"""
+def setup_logging(s3_bucket=None, s3_log_prefix="logs", enable_s3_logging=True):
+    """Setup comprehensive logging configuration with optional S3 support"""
     
     # Create logs directory if it doesn't exist
     log_dir = Path("logs")
@@ -16,15 +17,26 @@ def setup_logging():
     log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     date_format = '%Y-%m-%d %H:%M:%S'
     
+    # Setup handlers
+    handlers = [
+        logging.FileHandler(log_dir / "app.log"),
+        logging.StreamHandler()  # Also log to console
+    ]
+    
+    # Add S3 handler if configured
+    if enable_s3_logging and s3_bucket:
+        try:
+            s3_handler = S3LogHandler(s3_bucket, s3_log_prefix)
+            handlers.append(s3_handler)
+        except Exception as e:
+            print(f"Warning: Could not setup S3 logging: {e}")
+    
     # Configure root logger
     logging.basicConfig(
         level=logging.INFO,
         format=log_format,
         datefmt=date_format,
-        handlers=[
-            logging.FileHandler(log_dir / "app.log"),
-            logging.StreamHandler()  # Also log to console
-        ]
+        handlers=handlers
     )
     
     # Create specific loggers for different components
@@ -46,6 +58,15 @@ def setup_logging():
         handler.setFormatter(logging.Formatter(log_format, date_format))
         logger.addHandler(handler)
         logger.setLevel(logging.INFO)
+        
+        # Add S3 handler to component loggers if configured
+        if enable_s3_logging and s3_bucket:
+            try:
+                s3_handler = S3LogHandler(s3_bucket, f"{s3_log_prefix}/{name}")
+                s3_handler.setFormatter(logging.Formatter(log_format, date_format))
+                logger.addHandler(s3_handler)
+            except Exception as e:
+                print(f"Warning: Could not setup S3 logging for {name}: {e}")
     
     return loggers
 
@@ -152,20 +173,30 @@ def cleanup_old_logs(retention_days=180):
         print("No old log files found for cleanup")
         return {"deleted_files": [], "files_count": 0, "size_freed_mb": 0}
 
-def rotate_logs():
+def rotate_logs(s3_bucket=None, s3_log_prefix="logs", upload_to_s3=True):
     """
     Rotate log files by moving current logs to timestamped archives
-    This helps with log management and prevents single files from becoming too large
+    Optionally uploads rotated logs to S3
     """
     log_dir = Path("logs")
     if not log_dir.exists():
-        return
+        return {"rotated_files": [], "s3_uploaded": []}
     
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     rotated_files = []
+    s3_uploaded = []
     
     # List of log files to rotate
     log_files = ["app.log", "access.log", "security.log", "upload.log", "parsing.log", "database.log", "s3.log", "llm.log", "errors.log"]
+    
+    # Initialize S3 manager if needed
+    s3_manager = None
+    if upload_to_s3 and s3_bucket:
+        try:
+            s3_manager = S3LogManager(s3_bucket, s3_log_prefix)
+        except Exception as e:
+            print(f"Warning: Could not initialize S3 manager: {e}")
+            upload_to_s3 = False
     
     for log_file in log_files:
         log_path = log_dir / log_file
@@ -179,18 +210,33 @@ def rotate_logs():
                 shutil.move(str(log_path), str(archive_path))
                 rotated_files.append(archive_name)
                 
+                # Upload to S3 if configured
+                if upload_to_s3 and s3_manager:
+                    s3_key = f"{s3_log_prefix}/archives/{archive_name}"
+                    if s3_manager.upload_log_file(str(archive_path), s3_key):
+                        s3_uploaded.append(archive_name)
+                        # Optionally delete local archive after S3 upload
+                        # os.remove(archive_path)
+                
                 # Create new empty log file
                 log_path.touch()
                 
             except Exception as e:
                 print(f"Error rotating {log_file}: {e}")
     
+    result = {
+        "rotated_files": rotated_files,
+        "s3_uploaded": s3_uploaded
+    }
+    
     if rotated_files:
         print(f"Log rotation completed: {len(rotated_files)} files rotated")
-        return {"rotated_files": rotated_files}
+        if s3_uploaded:
+            print(f"S3 upload completed: {len(s3_uploaded)} files uploaded")
     else:
         print("No log files found for rotation")
-        return {"rotated_files": []}
+    
+    return result
 
 def get_log_stats():
     """Get statistics about log files (size, count, oldest/newest)"""
