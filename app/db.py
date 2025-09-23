@@ -12,6 +12,10 @@ if not DATABASE_URL:
         "Set DATABASE_URL environment variable, e.g. postgresql://user:pass@localhost:5432/resume_parser_db"
     )
 
+# Convert postgresql:// to postgresql+psycopg:// for psycopg3 compatibility
+if DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg://", 1)
+
 # SQLAlchemy engine and session factory
 engine = create_engine(
     DATABASE_URL,
