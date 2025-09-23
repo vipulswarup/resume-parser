@@ -61,16 +61,15 @@
 
 5. **Click "Create Web Service"**
 
-### **Step 4: Initialize Database**
+### **Step 4: Test Your Application**
 
 1. **Wait for deployment to complete** (5-10 minutes)
 2. **Go to your service URL** (e.g., `https://resume-parser.onrender.com`)
 3. **Check if it's working**: Visit `/health` endpoint
-4. **Initialize database tables**:
-   - Go to **Render Dashboard** → **Your Service** → **Shell**
-   - Run: `python3 create_tables.py`
+4. **Database is automatically initialized** on startup (no shell access needed)
+5. **Test upload**: Visit `/ui/upload` to test resume upload
 
-### **Step 5: Test Your Application**
+## 🎯 **Your Application URLs**
 
 1. **Health Check**: `https://your-app.onrender.com/health`
 2. **Upload Page**: `https://your-app.onrender.com/ui/upload`
@@ -84,10 +83,12 @@
 - ✅ **PostgreSQL Database**: 1GB storage (free)
 - ✅ **SSL Certificate**: Included
 - ✅ **Custom Domain**: Supported
+- ❌ **No Shell Access**: Cannot SSH or use dashboard shell
 - ⚠️ **Limitations**: 
   - Service sleeps after 15 minutes of inactivity
   - Cold start takes 30-60 seconds
   - 1GB database storage limit
+  - No shell/SSH access for debugging
 
 ### **Paid Plans (When You Need More)**
 - **Starter Plan**: $7/month

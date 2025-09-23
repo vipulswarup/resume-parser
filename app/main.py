@@ -38,6 +38,31 @@ loggers = setup_logging(
     enable_s3_logging=enable_s3_logging
 )
 
+# Initialize database tables on startup (for free tier deployment)
+@app.on_event("startup")
+async def startup_event():
+    """Initialize database tables on startup - SAFE operation that only creates missing tables"""
+    try:
+        from app.db import engine
+        from app import models
+        
+        # Check if tables already exist
+        from sqlalchemy import inspect
+        inspector = inspect(engine)
+        existing_tables = inspector.get_table_names()
+        
+        if existing_tables:
+            loggers['database'].info(f"Database tables already exist: {existing_tables}")
+            loggers['database'].info("Skipping table creation to preserve existing data")
+        else:
+            # Only create tables if none exist (first deployment)
+            models.Base.metadata.create_all(bind=engine)
+            loggers['database'].info("Database tables created successfully (first deployment)")
+            
+    except Exception as e:
+        loggers['errors'].error(f"Database initialization failed: {str(e)}")
+        # Don't fail startup, just log the error
+
 # Middleware for access logging
 @app.middleware("http")
 async def access_logging_middleware(request: Request, call_next):
