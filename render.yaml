@@ -1,0 +1,36 @@
+services:
+  - type: web
+    name: resume-parser
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: DATABASE_URL
+        fromDatabase:
+          name: resume-parser-db
+          property: connectionString
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: S3_BUCKET
+        sync: false
+      - key: S3_LOG_BUCKET
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: ENABLE_S3_LOGGING
+        value: "true"
+      - key: S3_LOG_PREFIX
+        value: "logs"
+
+databases:
+  - name: resume-parser-db
+    plan: free
+    databaseName: resume_parser_db
+    user: resume_parser_user
