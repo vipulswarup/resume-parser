@@ -1,10 +1,10 @@
 #!/bin/bash
-# Amazon Lightsail deployment script for Resume Parser
-# Run this script on your Lightsail instance
+# DigitalOcean VM deployment script for Resume Parser
+# Run this script on your DigitalOcean droplet
 
 set -e  # Exit on any error
 
-echo "🚀 Deploying Resume Parser to Amazon Lightsail"
+echo "🚀 Deploying Resume Parser to DigitalOcean VM"
 echo "=============================================="
 
 # Update system
@@ -15,9 +15,9 @@ sudo apt update && sudo apt upgrade -y
 echo "🐍 Installing Python 3.11..."
 sudo apt install -y python3.11 python3.11-venv python3.11-dev python3-pip
 
-# Install PostgreSQL client
+# Install PostgreSQL server and client
 echo "🐘 Installing PostgreSQL..."
-sudo apt install -y postgresql-client
+sudo apt install -y postgresql postgresql-contrib postgresql-client
 
 # Install system dependencies
 echo "📚 Installing system dependencies..."
@@ -32,8 +32,15 @@ cd $APP_DIR
 
 # Clone repository (replace with your Git URL)
 echo "📥 Cloning repository..."
-# git clone https://github.com/yourusername/resume-parser.git .
+# git clone https://github.com/vipulswarup/resume-parser.git .
 # For now, we'll assume files are already uploaded
+
+# Set up PostgreSQL database
+echo "🗄️  Setting up PostgreSQL database..."
+sudo -u postgres psql -c "CREATE DATABASE resume_parser_db;"
+sudo -u postgres psql -c "CREATE USER resume_user WITH PASSWORD 'your_secure_password';"
+sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE resume_parser_db TO resume_user;"
+sudo -u postgres psql -c "ALTER USER resume_user CREATEDB;"
 
 # Create virtual environment
 echo "🔧 Setting up Python virtual environment..."
@@ -121,8 +128,8 @@ EOF
 # Create environment file template
 echo "⚙️  Creating environment configuration..."
 cat > .env.template <<EOF
-# Database Configuration
-DATABASE_URL=postgresql://username:password@lightsail-db-host:5432/resume_parser_db
+# Database Configuration (Local PostgreSQL)
+DATABASE_URL=postgresql://resume_user:your_secure_password@localhost:5432/resume_parser_db
 
 # AWS Configuration
 AWS_ACCESS_KEY_ID=your_access_key
@@ -143,19 +150,22 @@ echo "✅ Deployment script completed!"
 echo ""
 echo "📋 Next Steps:"
 echo "1. Copy your .env file to $APP_DIR/.env"
-echo "2. Set up your database (Lightsail PostgreSQL)"
-echo "3. Configure your domain name in nginx"
-echo "4. Run: sudo systemctl enable resume-parser"
-echo "5. Run: sudo systemctl start resume-parser"
-echo "6. Run: sudo systemctl enable nginx"
-echo "7. Run: sudo systemctl start nginx"
-echo "8. Set up SSL: sudo certbot --nginx -d yourdomain.com"
+echo "2. Update database password in .env file"
+echo "3. Run: sudo systemctl enable resume-parser"
+echo "4. Run: sudo systemctl start resume-parser"
+echo "5. Run: sudo systemctl enable nginx"
+echo "6. Run: sudo systemctl start nginx"
+echo "7. Set up SSL (optional): sudo certbot --nginx -d yourdomain.com"
+echo "8. Access your app at: http://167.71.237.11"
 echo ""
 echo "🔧 Management Commands:"
 echo "  sudo systemctl status resume-parser    # Check service status"
 echo "  sudo systemctl restart resume-parser  # Restart service"
 echo "  sudo journalctl -u resume-parser -f   # View logs"
+echo "  sudo systemctl status postgresql      # Check database status"
 echo ""
 echo "📊 Monitoring:"
-echo "  curl http://localhost:8000/health     # Health check"
-echo "  curl http://localhost:8000/stats      # System statistics"
+echo "  curl http://167.71.237.11/health     # Health check"
+echo "  curl http://167.71.237.11/stats      # System statistics"
+echo "  curl http://167.71.237.11/ui/upload # Upload page"
+echo "  curl http://167.71.237.11/ui/candidates # Candidates page"
