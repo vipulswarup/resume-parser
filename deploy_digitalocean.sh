@@ -35,6 +35,12 @@ echo "📥 Cloning repository..."
 # git clone https://github.com/vipulswarup/resume-parser.git .
 # For now, we'll assume files are already uploaded
 
+# Copy files from current directory to app directory
+echo "📋 Copying application files..."
+CURRENT_DIR=$(pwd)
+cp -r $CURRENT_DIR/* $APP_DIR/
+cp -r $CURRENT_DIR/.* $APP_DIR/ 2>/dev/null || true
+
 # Set up PostgreSQL database
 echo "🗄️  Setting up PostgreSQL database..."
 sudo -u postgres psql -c "CREATE DATABASE resume_parser_db;"
