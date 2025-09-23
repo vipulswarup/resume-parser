@@ -1,11 +1,12 @@
+# Python 3.11 compatible requirements
 # Core FastAPI dependencies
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
 gunicorn==21.2.0
 
-# Database - use psycopg3 for better Python 3.13 support
+# Database - psycopg2 works with Python 3.11
 SQLAlchemy==1.4.53
-psycopg[binary]>=3.1.0
+psycopg2-binary==2.9.9
 
 # AWS
 boto3==1.34.0
@@ -16,8 +17,8 @@ openpyxl==3.1.2
 python-docx==1.1.0
 docx2pdf==0.1.8
 
-# Data processing
-pandas>=2.2.0
+# Data processing - compatible versions
+pandas==2.1.4
 python-dateutil==2.8.2
 
 # Text processing
