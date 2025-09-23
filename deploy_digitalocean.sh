@@ -11,9 +11,9 @@ echo "=============================================="
 echo "📦 Updating system packages..."
 sudo apt update && sudo apt upgrade -y
 
-# Install Python 3.11 and pip
-echo "🐍 Installing Python 3.11..."
-sudo apt install -y python3.11 python3.11-venv python3.11-dev python3-pip
+# Install Python 3.12 and pip (Ubuntu 24.04 default)
+echo "🐍 Installing Python 3.12..."
+sudo apt install -y python3.12 python3.12-venv python3.12-dev python3-pip
 
 # Install PostgreSQL server and client
 echo "🐘 Installing PostgreSQL..."
@@ -44,7 +44,7 @@ sudo -u postgres psql -c "ALTER USER resume_user CREATEDB;"
 
 # Create virtual environment
 echo "🔧 Setting up Python virtual environment..."
-python3.11 -m venv .venv
+python3.12 -m venv .venv
 source .venv/bin/activate
 
 # Install Python dependencies

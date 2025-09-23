@@ -1,10 +1,10 @@
-# Python 3.11 compatible requirements
+# Python 3.12 compatible requirements
 # Core FastAPI dependencies
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
 gunicorn==21.2.0
 
-# Database - psycopg2 works with Python 3.11
+# Database - psycopg2 works with Python 3.12
 SQLAlchemy==1.4.53
 psycopg2-binary==2.9.9
 
