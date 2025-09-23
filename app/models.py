@@ -8,7 +8,7 @@ from .db import Base
 class Candidate(Base):
     __tablename__ = "candidates"
     id = Column(Integer, primary_key=True)
-    full_name = Column(String(255), nullable=False)
+    full_name = Column(String(255), nullable=True)
     title = Column(String(255))
     first_name = Column(String(100))
     middle_name = Column(String(100))

@@ -107,6 +107,15 @@ def parse_with_llm(resume_text: str) -> dict:
     """Try Groq instant, then Groq 70B, then OpenAI."""
     prompt = PROMPT_TEMPLATE.replace("{resume_text}", resume_text)
 
+    # Check if we have any working clients
+    groq_available = groq_client is not None
+    openai_available = get_openai_client() is not None
+    
+    print(f"[DEBUG] Groq available: {groq_available}, OpenAI available: {openai_available}")
+    
+    if not groq_available and not openai_available:
+        return {"error": "No LLM clients available - check API keys"}
+
     try:
         if groq_client:
             return _call_groq(prompt, "llama-3.1-8b-instant")

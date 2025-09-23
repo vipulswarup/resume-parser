@@ -10,8 +10,50 @@ def save_parsed_candidate(parsed: dict, resume_id: int, db: Session):
     Creates/updates Candidate and child tables.
     Links Candidate to Resume.
     """
+    
+    # Check if parsing failed
+    if "error" in parsed:
+        # Create a minimal candidate record for failed parsing
+        candidate = models.Candidate(
+            full_name="Parsing Failed",
+            current_location=None,
+            linkedin_url=None,
+            current_salary=None,
+            expected_salary=None,
+            notice_period=None,
+            total_experience_years=0.0,
+            processing_date=datetime.utcnow(),
+            status="failed",
+            raw_json=parsed
+        )
+        
+        db.add(candidate)
+        db.flush()
+        
+        # Link Resume to Candidate
+        resume = db.query(models.Resume).filter_by(id=resume_id).first()
+        if resume:
+            resume.candidate_id = candidate.id
+            resume.parsed_confidence = 0
+            resume.parsed_model = "Failed"
+        
+        db.commit()
+        db.refresh(candidate)
+        
+        # Log failed parsing
+        database_logger = logging.getLogger('resume_parser.database')
+        log_processing_event(
+            database_logger,
+            "CANDIDATE_SAVED_FAILED",
+            candidate_id=candidate.id,
+            resume_id=resume_id,
+            details=f"Parsing failed: {parsed.get('error', 'Unknown error')}",
+            success=False
+        )
+        
+        return candidate.id
 
-    # --- 1. Candidate record ---
+    # --- 1. Candidate record (successful parsing) ---
     candidate = models.Candidate(
         full_name=parsed.get("full_name"),
         current_location=parsed.get("location"),  # ✅ mapped correctly
