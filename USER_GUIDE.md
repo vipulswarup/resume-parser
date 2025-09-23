@@ -7,6 +7,15 @@ Welcome to the Resume Parser system! This guide will help you upload resumes and
 **Your Resume Parser is available at:**  
 **https://resume-parser-urhn.onrender.com/**
 
+### ⚠️ **Important: Free Tier Limitations**
+
+**Your free instance will spin down with inactivity, which can delay requests by 50 seconds or more.**
+
+- **First request after inactivity**: May take 50-60 seconds to load
+- **Subsequent requests**: Normal speed (2-5 seconds)
+- **Inactivity timeout**: 15 minutes of no activity
+- **Solution**: Simply wait for the first request to complete, then normal operation resumes
+
 ---
 
 ## 📋 Quick Start Guide
@@ -109,6 +118,12 @@ Welcome to the Resume Parser system! This guide will help you upload resumes and
 
 ### **Common Issues**
 
+**❌ Site loads very slowly (50+ seconds)**
+- **This is normal**: Free tier spins down after 15 minutes of inactivity
+- **First request**: Always takes 50-60 seconds to wake up the server
+- **Solution**: Wait patiently for the first load, then normal speed resumes
+- **Prevention**: Use the system regularly to keep it active
+
 **❌ Upload fails**
 - **Check file format**: Use PDF, DOCX, or DOC only
 - **Check file size**: Keep under 10MB
@@ -142,6 +157,12 @@ Welcome to the Resume Parser system! This guide will help you upload resumes and
 - **File limits**: Maximum 10MB per file
 - **Concurrent uploads**: One at a time for best results
 - **Data retention**: All data is securely stored
+
+### **⚠️ Free Tier Performance**
+- **Cold start delay**: 50-60 seconds after 15 minutes of inactivity
+- **Normal operation**: 2-5 seconds for regular requests
+- **Recommendation**: Use the system regularly to maintain responsiveness
+- **Upgrade option**: Contact IT for paid tier with no delays
 
 ---
 
