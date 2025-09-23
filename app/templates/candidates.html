@@ -5,6 +5,41 @@
   <a href="/export/excel" class="btn btn-primary">Export to Excel</a>
   <a href="/ui/upload" class="btn btn-secondary">Upload More Resumes</a>
 </div>
+
+<!-- Filter Form -->
+<div class="filter-section">
+  <h3>Filter Candidates</h3>
+  <form method="get" action="/ui/candidates">
+    <div>
+      <label for="search">Search Name:</label>
+      <input type="text" id="search" name="search" value="{{ request.query_params.get('search', '') }}" placeholder="Enter name to search">
+    </div>
+    <div>
+      <label for="date_from">From Date:</label>
+      <input type="date" id="date_from" name="date_from" value="{{ request.query_params.get('date_from', '') }}">
+    </div>
+    <div>
+      <label for="date_to">To Date:</label>
+      <input type="date" id="date_to" name="date_to" value="{{ request.query_params.get('date_to', '') }}">
+    </div>
+    <div>
+      <label for="skills">Skills (comma-separated):</label>
+      <input type="text" id="skills" name="skills" value="{{ request.query_params.get('skills', '') }}" placeholder="Python, Java, React">
+    </div>
+    <div>
+      <label for="experience_min">Min Experience:</label>
+      <input type="number" id="experience_min" name="experience_min" value="{{ request.query_params.get('experience_min', '') }}" placeholder="0" step="0.1" min="0">
+    </div>
+    <div>
+      <label for="experience_max">Max Experience:</label>
+      <input type="number" id="experience_max" name="experience_max" value="{{ request.query_params.get('experience_max', '') }}" placeholder="10" step="0.1" min="0">
+    </div>
+    <div>
+      <button type="submit" class="btn btn-primary">Apply Filters</button>
+      <a href="/ui/candidates" class="btn btn-secondary">Clear Filters</a>
+    </div>
+  </form>
+</div>
 <table>
   <tr>
     <th>ID</th>

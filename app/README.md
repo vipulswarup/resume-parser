@@ -37,7 +37,13 @@ The system also provides a **web UI** (via FastAPI + Jinja2) for internal users 
   - Saves results into DB.
 - **UI:**
   - `/ui/upload` → HTML form to upload resumes.
-  - `/ui/candidates` → HTML table listing parsed candidates.
+  - `/ui/candidates` → HTML table listing parsed candidates with filtering.
+- **Logging & Monitoring:**
+  - Comprehensive logging system with component-specific loggers.
+  - Access logs with IP addresses and timestamps.
+  - Security event logging.
+  - Performance monitoring and statistics.
+  - Automatic log cleanup and rotation.
 
 ### 3. Working Test Cases
 - ✅ File upload works via API and UI.  
@@ -45,27 +51,34 @@ The system also provides a **web UI** (via FastAPI + Jinja2) for internal users 
 - ✅ Parsing works with Groq (fast) and OpenAI (fallback).  
 - ✅ Parsed data saved in PostgreSQL and verified via `psql`.  
 - ✅ `parsed_model` column tracks which model parsed each resume.  
-- ✅ Candidates show up in `/ui/candidates`.  
+- ✅ Candidates show up in `/ui/candidates` with filtering.
+- ✅ Comprehensive logging system operational.
+- ✅ Access logs capture all HTTP requests with IPs and timestamps.
+- ✅ Security events are logged and monitored.
+- ✅ Excel export functionality working.
+- ✅ Template generation (DOCX/PDF) working.  
 
 ---
 
 ## ⏭️ Next Steps
 
 ### UI Enhancements
-- Fix blank page issue (likely template resolution path).
-- Add **filters** on candidates page (date range, skills, positions).
-- Add **Excel export** from UI.
-- Add **download standardized DOCX template** (auto-filled with candidate data).
+- Add **pagination** to candidates page for large datasets.
+- Add **candidate detail view** page.
+- Improve **mobile responsiveness**.
+- Add **bulk operations** (bulk delete, bulk export).
 
 ### Data Handling
 - Improve **skill normalization** by mapping extracted skills to a master skills table.
 - Handle **multiple emails & phone numbers** per candidate.
 - Support **multiple resumes per candidate**.
+- Add **data validation** and quality checks.
 
 ### Deployment / Ops
-- Add **logging** (parsing errors, model used, confidence).
-- Store **access logs for 6 months** (Cert-In requirement).
-- Provide **documentation & scripts** for local setup.
+- **Docker containerization** for easy deployment.
+- **Production deployment** scripts and documentation.
+- **Database migration** scripts.
+- **Backup and recovery** procedures.
 
 ---
 
@@ -151,14 +164,84 @@ resume-parser/
 
 ---
 
+## 📚 API Documentation
+
+### Core Endpoints
+
+#### **Resume Upload & Processing**
+- `POST /upload` - Upload resume file (API)
+- `POST /ui/upload` - Upload resume file (UI form)
+- `GET /ui/upload` - Upload form page
+
+#### **Candidate Management**
+- `GET /ui/candidates` - List candidates with filtering
+- `GET /download/{resume_id}` - Download original resume file
+
+#### **Data Export**
+- `GET /export/excel` - Export candidates to Excel
+  - Query params: `date_from`, `date_to`, `skills`
+- `GET /generate-template/{candidate_id}` - Generate standardized resume
+  - Query params: `format` (docx/pdf), `template` (standard/v2)
+
+#### **Monitoring & Health**
+- `GET /health` - Basic health check
+- `GET /stats` - System statistics
+- `GET /logs/recent` - Recent application logs
+- `GET /logs/access` - Access logs with IP addresses
+- `GET /logs/security` - Security event logs
+- `GET /logs/stats` - Log file statistics
+
+#### **Log Management**
+- `POST /logs/cleanup` - Clean up old logs (retention_days param)
+- `POST /logs/rotate` - Rotate current logs to archives
+
+### Filtering Parameters (Candidates Page)
+- `search` - Search by candidate name
+- `date_from` - Filter from processing date
+- `date_to` - Filter to processing date  
+- `skills` - Comma-separated skills filter
+- `experience_min` - Minimum years of experience
+- `experience_max` - Maximum years of experience
+
+### Response Formats
+
+#### **System Statistics** (`/stats`)
+```json
+{
+  "total_candidates": 150,
+  "total_resumes": 150,
+  "recent_uploads_24h": 5,
+  "parsing_success_rate": 94.2,
+  "model_usage": {
+    "groq-llama-3.1-8b": 120,
+    "openai-gpt-4": 30
+  },
+  "timestamp": "2024-01-15T10:30:45"
+}
+```
+
+#### **Access Logs** (`/logs/access`)
+```json
+{
+  "access_logs": [
+    "ACCESS - IP: 192.168.1.100 | GET /ui/candidates | Status: 200 | Time: 0.045s | UA: Mozilla/5.0...",
+    "ACCESS - IP: 192.168.1.100 | POST /ui/upload | Status: 200 | Time: 2.456s | UA: Mozilla/5.0..."
+  ],
+  "count": 2
+}
+```
+
+---
+
 ## 🚀 Roadmap
 
-1. Fix UI blank page issue.
-2. Add Excel export with filters.
-3. Add standardized resume DOCX/PDF generation.
-4. Improve skill mapping and master data tables.
-5. Add logging + Cert-In compliance features.
-6. Finalize documentation for deployment.
+1. ✅ ~~Fix UI blank page issue~~ - **COMPLETED**
+2. ✅ ~~Add Excel export with filters~~ - **COMPLETED**  
+3. ✅ ~~Add standardized resume DOCX/PDF generation~~ - **COMPLETED**
+4. ✅ ~~Add logging + Cert-In compliance features~~ - **COMPLETED**
+5. **Improve skill mapping and master data tables**
+6. **Docker containerization for deployment**
+7. **Production deployment documentation**
 
 ---
 

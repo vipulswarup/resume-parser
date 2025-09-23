@@ -1,6 +1,8 @@
 from sqlalchemy.orm import Session
 from datetime import datetime
 from app import models
+from app.logging_config import log_processing_event
+import logging
 
 def save_parsed_candidate(parsed: dict, resume_id: int, db: Session):
     """
@@ -83,5 +85,16 @@ def save_parsed_candidate(parsed: dict, resume_id: int, db: Session):
 
     db.commit()
     db.refresh(candidate)
+
+    # Log successful candidate creation
+    database_logger = logging.getLogger('resume_parser.database')
+    log_processing_event(
+        database_logger,
+        "CANDIDATE_SAVED",
+        candidate_id=candidate.id,
+        resume_id=resume_id,
+        details=f"Saved {len(parsed.get('skills', []))} skills, {len(parsed.get('experience', []))} experiences",
+        success=True
+    )
 
     return candidate.id

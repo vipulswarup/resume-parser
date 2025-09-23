@@ -6,6 +6,13 @@
   <button type="submit">Upload</button>
 </form>
 {% if message %}
-  <p><b>{{ message }}</b></p>
+  <div style="background: #d4edda; color: #155724; padding: 10px; border-radius: 4px; margin: 10px 0;">
+    <strong>Success:</strong> {{ message }}
+  </div>
+{% endif %}
+{% if error %}
+  <div style="background: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; margin: 10px 0;">
+    <strong>Error:</strong> {{ error }}
+  </div>
 {% endif %}
 {% endblock %}
