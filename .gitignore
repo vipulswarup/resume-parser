@@ -274,3 +274,5 @@ temp_*
 secrets/
 credentials/
 
+test-data/
+test-data/*

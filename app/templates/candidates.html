@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 {% block content %}
 <h2>Candidates</h2>
+<div style="margin-bottom: 20px;">
+  <a href="/export/excel" class="btn btn-primary">Export to Excel</a>
+  <a href="/ui/upload" class="btn btn-secondary">Upload More Resumes</a>
+</div>
 <table>
   <tr>
     <th>ID</th>
@@ -9,6 +13,7 @@
     <th>Skills</th>
     <th>Parsed Model</th>
     <th>Resume</th>
+    <th>Actions</th>
   </tr>
   {% for c in candidates %}
   <tr>
@@ -17,7 +22,15 @@
     <td>{{ c.total_experience_years }}</td>
     <td>{{ ", ".join(c.skills) }}</td>
     <td>{{ c.parsed_model }}</td>
-    <td><a href="{{ c.resume_url }}">View</a></td>
+    <td><a href="{{ c.resume_url }}">View Original</a></td>
+    <td>
+      <div class="btn-group">
+        <a href="/generate-template/{{ c.id }}?format=docx&template=standard" class="btn btn-sm btn-primary">Standard DOCX</a>
+        <a href="/generate-template/{{ c.id }}?format=docx&template=v2" class="btn btn-sm btn-secondary">V2 DOCX</a>
+        <a href="/generate-template/{{ c.id }}?format=pdf&template=standard" class="btn btn-sm btn-primary">Standard PDF</a>
+        <a href="/generate-template/{{ c.id }}?format=pdf&template=v2" class="btn btn-sm btn-secondary">V2 PDF</a>
+      </div>
+    </td>
   </tr>
   {% endfor %}
 </table>
