@@ -238,6 +238,18 @@ else
     echo "🔧 Troubleshooting: Check if PostgreSQL is running and credentials are correct"
 fi
 
+# Create database tables
+echo "🗄️  Creating database tables..."
+cd $APP_DIR
+source .venv/bin/activate
+python3 create_tables.py
+if [ $? -eq 0 ]; then
+    echo "✅ Database tables created successfully"
+else
+    echo "❌ Failed to create database tables"
+    echo "🔧 You may need to run: python3 create_tables.py manually"
+fi
+
 # Reload systemd and start services
 echo "🔄 Starting services..."
 sudo systemctl daemon-reload
