@@ -46,6 +46,7 @@
     <th>Name</th>
     <th>Experience</th>
     <th>Skills</th>
+    <th>Status</th>
     <th>Parsed Model</th>
     <th>Resume</th>
     <th>Actions</th>
@@ -56,15 +57,30 @@
     <td>{{ c.full_name }}</td>
     <td>{{ c.total_experience_years }}</td>
     <td>{{ ", ".join(c.skills) }}</td>
+    <td>
+      {% if c.processing_status == "processing" %}
+        <span class="status-processing">🔄 Processing</span>
+      {% elif c.processing_status == "completed" %}
+        <span class="status-completed">✅ Completed</span>
+      {% elif c.processing_status == "failed" %}
+        <span class="status-failed">❌ Failed</span>
+      {% else %}
+        <span class="status-unknown">❓ Unknown</span>
+      {% endif %}
+    </td>
     <td>{{ c.parsed_model }}</td>
     <td><a href="{{ c.resume_url }}">View Original</a></td>
     <td>
-      <div class="btn-group">
-        <a href="/generate-template/{{ c.id }}?format=docx&template=standard" class="btn btn-sm btn-primary">Standard DOCX</a>
-        <a href="/generate-template/{{ c.id }}?format=docx&template=v2" class="btn btn-sm btn-secondary">V2 DOCX</a>
-        <a href="/generate-template/{{ c.id }}?format=pdf&template=standard" class="btn btn-sm btn-primary">Standard PDF</a>
-        <a href="/generate-template/{{ c.id }}?format=pdf&template=v2" class="btn btn-sm btn-secondary">V2 PDF</a>
-      </div>
+      {% if c.processing_status == "completed" %}
+        <div class="btn-group">
+          <a href="/generate-template/{{ c.id }}?format=docx&template=standard" class="btn btn-sm btn-primary">Standard DOCX</a>
+          <a href="/generate-template/{{ c.id }}?format=docx&template=v2" class="btn btn-sm btn-secondary">V2 DOCX</a>
+          <a href="/generate-template/{{ c.id }}?format=pdf&template=standard" class="btn btn-sm btn-primary">Standard PDF</a>
+          <a href="/generate-template/{{ c.id }}?format=pdf&template=v2" class="btn btn-sm btn-secondary">V2 PDF</a>
+        </div>
+      {% else %}
+        <span class="text-muted">Processing...</span>
+      {% endif %}
     </td>
   </tr>
   {% endfor %}

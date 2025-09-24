@@ -271,7 +271,6 @@ async def ui_upload_form(request: Request):
 async def ui_upload_resume(request: Request, file: UploadFile = File(...), db: Session = Depends(get_db)):
     start_time = time.time()
     upload_logger = loggers['upload']
-    parsing_logger = loggers['parsing']
     error_logger = loggers['errors']
     
     try:
@@ -283,34 +282,11 @@ async def ui_upload_resume(request: Request, file: UploadFile = File(...), db: S
         s3_url = upload_bytes(contents, file.filename, prefix="resumes")
         upload_logger.info(f"S3 upload successful: {s3_url}")
 
-        # Save temp file locally for text extraction
-        local_path = f"/tmp/{file.filename}"
-        with open(local_path, "wb") as f:
-            f.write(contents)
-
-        # Extract text
-        parsing_logger.info(f"Starting text extraction for: {file.filename}")
-        text = extract_text(local_path)
-        parsing_logger.info(f"Text extraction completed. Length: {len(text)} characters")
-
-        # Parse with LLM
-        parsing_logger.info("Starting LLM parsing")
-        parse_start = time.time()
-        parsed = parse_with_llm(text)
-        parse_time = time.time() - parse_start
-        
-        # Log parsing results
-        model_used = parsed.get('model_used', 'unknown')
-        confidence = parsed.get('confidence', 90.0)
-        log_llm_usage(parsing_logger, model_used, processing_time=parse_time)
-        log_parsing_quality(parsing_logger, confidence, model_used)
-
-        # Save resume
+        # Save resume record with processing status
         resume = models.Resume(
             source_filename=file.filename, 
             file_url=s3_url, 
-            parsed_confidence=confidence,
-            parsed_model=model_used,
+            processing_status="processing",
             uploaded_at=datetime.now()
         )
         db.add(resume)
@@ -319,30 +295,22 @@ async def ui_upload_resume(request: Request, file: UploadFile = File(...), db: S
         
         upload_logger.info(f"Resume saved to database: ID {resume.id}")
 
-        # Save candidate
-        candidate_id = save_parsed_candidate(parsed, resume.id, db)
+        # Start background processing
+        from app.background_tasks import start_background_processing
+        start_background_processing(resume.id, s3_url, file.filename)
         
-        # Log processing event
-        total_time = time.time() - start_time
-        log_processing_event(
-            upload_logger, 
-            "RESUME_PROCESSING_COMPLETE", 
-            candidate_id=candidate_id, 
-            resume_id=resume.id,
-            details=f"Processing time: {total_time:.2f}s, Confidence: {confidence}%",
-            success=True
-        )
+        upload_logger.info(f"Background processing started for resume ID: {resume.id}")
 
         # Clean up temp file
         import os
         try:
-            os.remove(local_path)
+            os.remove(f"/tmp/{file.filename}")
         except:
             pass
 
         return templates.TemplateResponse(
             "upload.html",
-            {"request": request, "message": f"Successfully uploaded and parsed candidate {candidate_id} (Confidence: {confidence}%)"}
+            {"request": request, "message": f"Resume uploaded successfully! Processing in background. Resume ID: {resume.id}"}
         )
         
     except Exception as e:
@@ -429,6 +397,7 @@ def ui_list_candidates(
             "total_experience_years": c.total_experience_years,
             "skills": skills,
             "parsed_model": resume.parsed_model if resume else None,
+            "processing_status": resume.processing_status if resume else "unknown",
             "resume_url": f"/download/{resume.id}" if resume else "#"
         })
     

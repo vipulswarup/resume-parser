@@ -127,6 +127,7 @@ class Resume(Base):
     uploaded_at = Column(TIMESTAMP)
     candidate = relationship("Candidate", back_populates="resumes")
     parsed_model = Column(String, nullable=True)
+    processing_status = Column(String(50), default="processing")  # processing, completed, failed
 
 
 class ProcessingLog(Base):
