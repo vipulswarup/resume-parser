@@ -3,14 +3,33 @@ from tenacity import retry, wait_exponential, stop_after_attempt
 from dotenv import load_dotenv
 
 # Always load .env explicitly
-load_dotenv(dotenv_path=".env")
+import os
+from pathlib import Path
+
+# Get the project root directory (one level up from app/)
+project_root = Path(__file__).parent.parent
+env_path = project_root / ".env"
+
+# Load .env from project root
+load_dotenv(dotenv_path=env_path)
 
 # --- Groq client (primary) ---
 try:
     from groq import Groq
-    groq_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+    groq_api_key = os.getenv("GROQ_API_KEY")
+    print(f"[DEBUG] Groq API key found: {bool(groq_api_key)}")
+    if groq_api_key:
+        groq_client = Groq(api_key=groq_api_key)
+        print("[DEBUG] Groq client initialized successfully")
+    else:
+        groq_client = None
+        print("[DEBUG] No Groq API key found")
 except ImportError:
     groq_client = None
+    print("[DEBUG] Groq import failed")
+except Exception as e:
+    groq_client = None
+    print(f"[DEBUG] Groq client initialization failed: {e}")
 
 # --- OpenAI client (fallback) - lazy initialization ---
 openai_client = None
@@ -22,10 +41,14 @@ def get_openai_client():
         try:
             from openai import OpenAI
             openai_api_key = os.getenv("OPENAI_API_KEY")
+            print(f"[DEBUG] OpenAI API key found: {bool(openai_api_key)}")
             if openai_api_key:
                 openai_client = OpenAI(api_key=openai_api_key)
+                print("[DEBUG] OpenAI client initialized successfully")
+            else:
+                print("[DEBUG] No OpenAI API key found")
         except (ImportError, Exception) as e:
-            print(f"OpenAI client initialization failed: {e}")
+            print(f"[DEBUG] OpenAI client initialization failed: {e}")
             openai_client = None
     return openai_client
 
