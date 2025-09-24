@@ -50,10 +50,28 @@ fi
 
 # Set up PostgreSQL database
 echo "🗄️  Setting up PostgreSQL database..."
-sudo -u postgres psql -c "CREATE DATABASE resume_parser_db;"
+# Start PostgreSQL if not running
+sudo systemctl start postgresql
+sudo systemctl enable postgresql
+
+# Create database and user with proper authentication
+sudo -u postgres psql -c "CREATE DATABASE resume_parser_db;" 2>/dev/null || echo "Database already exists"
+sudo -u postgres psql -c "DROP USER IF EXISTS resume_user;" 2>/dev/null || true
 sudo -u postgres psql -c "CREATE USER resume_user WITH PASSWORD 'your_secure_password';"
 sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE resume_parser_db TO resume_user;"
 sudo -u postgres psql -c "ALTER USER resume_user CREATEDB;"
+
+# Configure PostgreSQL for local connections
+echo "🔧 Configuring PostgreSQL authentication..."
+sudo tee -a /etc/postgresql/16/main/pg_hba.conf > /dev/null <<EOF
+# Resume Parser local connections
+local   resume_parser_db    resume_user                    md5
+host    resume_parser_db    resume_user    127.0.0.1/32    md5
+host    resume_parser_db    resume_user    ::1/128         md5
+EOF
+
+# Restart PostgreSQL to apply changes
+sudo systemctl restart postgresql
 
 # Create virtual environment
 echo "🔧 Setting up Python virtual environment..."
@@ -65,19 +83,26 @@ echo "📦 Installing Python dependencies..."
 pip install --upgrade pip
 pip install -r requirements.txt
 
+# Kill any existing processes using port 8000
+echo "🔄 Stopping any existing services..."
+sudo pkill -f "uvicorn" 2>/dev/null || true
+sudo pkill -f "port 8000" 2>/dev/null || true
+sleep 2
+
 # Create systemd service
 echo "⚙️  Creating systemd service..."
 sudo tee /etc/systemd/system/resume-parser.service > /dev/null <<EOF
 [Unit]
 Description=Resume Parser FastAPI Application
-After=network.target
+After=network.target postgresql.service
+Requires=postgresql.service
 
 [Service]
 Type=exec
-User=$USER
-Group=$USER
+User=root
+Group=root
 WorkingDirectory=$APP_DIR
-Environment=PATH=$APP_DIR/.venv/bin
+Environment=PATH=$APP_DIR/.venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 ExecStart=$APP_DIR/.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000
 Restart=always
 RestartSec=10
@@ -159,17 +184,46 @@ ENABLE_S3_LOGGING=true
 S3_LOG_PREFIX=logs
 EOF
 
-echo "✅ Deployment script completed!"
+# Create .env file if it doesn't exist
+if [ ! -f ".env" ]; then
+    echo "📝 Creating .env file from template..."
+    cp .env.template .env
+    echo "⚠️  Please update .env file with your actual API keys and credentials"
+fi
+
+# Test database connection
+echo "🧪 Testing database connection..."
+sudo -u postgres psql -c "SELECT 1;" > /dev/null && echo "✅ PostgreSQL connection successful" || echo "❌ PostgreSQL connection failed"
+
+# Reload systemd and start services
+echo "🔄 Starting services..."
+sudo systemctl daemon-reload
+sudo systemctl enable resume-parser
+sudo systemctl start resume-parser
+sudo systemctl enable nginx
+sudo systemctl start nginx
+
+# Wait for service to start
+echo "⏳ Waiting for service to start..."
+sleep 5
+
+# Test the application
+echo "🧪 Testing application..."
+if curl -s http://localhost:8000/health > /dev/null; then
+    echo "✅ Application is running successfully!"
+    echo "🌐 Your app is available at: http://167.71.237.11"
+else
+    echo "❌ Application failed to start. Check logs with: sudo journalctl -u resume-parser -f"
+fi
+
 echo ""
-echo "📋 Next Steps:"
-echo "1. Copy your .env file to $APP_DIR/.env"
-echo "2. Update database password in .env file"
-echo "3. Run: sudo systemctl enable resume-parser"
-echo "4. Run: sudo systemctl start resume-parser"
-echo "5. Run: sudo systemctl enable nginx"
-echo "6. Run: sudo systemctl start nginx"
-echo "7. Set up SSL (optional): sudo certbot --nginx -d yourdomain.com"
-echo "8. Access your app at: http://167.71.237.11"
+echo "🎉 Deployment completed successfully!"
+echo ""
+echo "📋 Your Resume Parser is now running at:"
+echo "  🌐 Main App: http://167.71.237.11"
+echo "  📤 Upload: http://167.71.237.11/ui/upload"
+echo "  👥 Candidates: http://167.71.237.11/ui/candidates"
+echo "  ❤️  Health: http://167.71.237.11/health"
 echo ""
 echo "🔧 Management Commands:"
 echo "  sudo systemctl status resume-parser    # Check service status"
@@ -177,8 +231,8 @@ echo "  sudo systemctl restart resume-parser  # Restart service"
 echo "  sudo journalctl -u resume-parser -f   # View logs"
 echo "  sudo systemctl status postgresql      # Check database status"
 echo ""
-echo "📊 Monitoring:"
+echo "📊 Quick Tests:"
 echo "  curl http://167.71.237.11/health     # Health check"
 echo "  curl http://167.71.237.11/stats      # System statistics"
-echo "  curl http://167.71.237.11/ui/upload # Upload page"
-echo "  curl http://167.71.237.11/ui/candidates # Candidates page"
+echo ""
+echo "⚠️  Remember to update your .env file with real API keys!"
