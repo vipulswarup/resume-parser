@@ -72,6 +72,14 @@ sudo -u postgres psql -c "ALTER USER resume_user CREATEDB;" 2>/dev/null || true
 # Update password for existing user
 sudo -u postgres psql -c "ALTER USER resume_user PASSWORD '$DB_PASSWORD';" 2>/dev/null || true
 
+# Grant schema permissions
+echo "🔐 Granting schema permissions..."
+sudo -u postgres psql -d resume_parser_db -c "GRANT ALL ON SCHEMA public TO resume_user;" 2>/dev/null || true
+sudo -u postgres psql -d resume_parser_db -c "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO resume_user;" 2>/dev/null || true
+sudo -u postgres psql -d resume_parser_db -c "GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO resume_user;" 2>/dev/null || true
+sudo -u postgres psql -d resume_parser_db -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO resume_user;" 2>/dev/null || true
+sudo -u postgres psql -d resume_parser_db -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO resume_user;" 2>/dev/null || true
+
 # Configure PostgreSQL for local connections
 echo "🔧 Configuring PostgreSQL authentication..."
 # Check if configuration already exists
