@@ -54,15 +54,23 @@ echo "🗄️  Setting up PostgreSQL database..."
 sudo systemctl start postgresql
 sudo systemctl enable postgresql
 
+# Generate secure password for database
+echo "🔐 Generating secure database password..."
+DB_PASSWORD=$(openssl rand -base64 32 | tr -d "=+/" | cut -c1-25)
+echo "✅ Generated secure password for resume_user"
+
 # Create database and user with proper authentication
 echo "📊 Creating database..."
 sudo -u postgres psql -c "CREATE DATABASE resume_parser_db;" 2>/dev/null || echo "✅ Database already exists"
 
 echo "👤 Setting up database user..."
 sudo -u postgres psql -c "DROP USER IF EXISTS resume_user;" 2>/dev/null || true
-sudo -u postgres psql -c "CREATE USER resume_user WITH PASSWORD 'your_secure_password';" 2>/dev/null || echo "✅ User already exists"
+sudo -u postgres psql -c "CREATE USER resume_user WITH PASSWORD '$DB_PASSWORD';" 2>/dev/null || echo "✅ User already exists"
 sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE resume_parser_db TO resume_user;" 2>/dev/null || true
 sudo -u postgres psql -c "ALTER USER resume_user CREATEDB;" 2>/dev/null || true
+
+# Update password for existing user
+sudo -u postgres psql -c "ALTER USER resume_user PASSWORD '$DB_PASSWORD';" 2>/dev/null || true
 
 # Configure PostgreSQL for local connections
 echo "🔧 Configuring PostgreSQL authentication..."
@@ -193,16 +201,42 @@ ENABLE_S3_LOGGING=true
 S3_LOG_PREFIX=logs
 EOF
 
+# Update .env file with correct database URL
+echo "📝 Updating .env file with database configuration..."
+DB_URL="postgresql://resume_user:$DB_PASSWORD@localhost:5432/resume_parser_db"
+
 # Create .env file if it doesn't exist
 if [ ! -f ".env" ]; then
-    echo "📝 Creating .env file from template..."
+    echo "📝 Creating new .env file..."
     cp .env.template .env
-    echo "⚠️  Please update .env file with your actual API keys and credentials"
 fi
+
+# Update or add DATABASE_URL in .env file
+if grep -q "DATABASE_URL=" .env; then
+    # Update existing DATABASE_URL
+    sed -i "s|DATABASE_URL=.*|DATABASE_URL=$DB_URL|" .env
+    echo "✅ Updated existing DATABASE_URL in .env file"
+else
+    # Add DATABASE_URL to .env file
+    echo "DATABASE_URL=$DB_URL" >> .env
+    echo "✅ Added DATABASE_URL to .env file"
+fi
+
+echo "🔐 Database password saved to .env file"
+echo "⚠️  Please update other values in .env file with your actual API keys and credentials"
 
 # Test database connection
 echo "🧪 Testing database connection..."
 sudo -u postgres psql -c "SELECT 1;" > /dev/null && echo "✅ PostgreSQL connection successful" || echo "❌ PostgreSQL connection failed"
+
+# Test database connection with application credentials
+echo "🧪 Testing application database connection..."
+if psql "$DB_URL" -c "SELECT 1;" > /dev/null 2>&1; then
+    echo "✅ Application database connection successful"
+else
+    echo "❌ Application database connection failed"
+    echo "🔧 Troubleshooting: Check if PostgreSQL is running and credentials are correct"
+fi
 
 # Reload systemd and start services
 echo "🔄 Starting services..."
