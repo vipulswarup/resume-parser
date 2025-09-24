@@ -55,20 +55,29 @@ sudo systemctl start postgresql
 sudo systemctl enable postgresql
 
 # Create database and user with proper authentication
-sudo -u postgres psql -c "CREATE DATABASE resume_parser_db;" 2>/dev/null || echo "Database already exists"
+echo "📊 Creating database..."
+sudo -u postgres psql -c "CREATE DATABASE resume_parser_db;" 2>/dev/null || echo "✅ Database already exists"
+
+echo "👤 Setting up database user..."
 sudo -u postgres psql -c "DROP USER IF EXISTS resume_user;" 2>/dev/null || true
-sudo -u postgres psql -c "CREATE USER resume_user WITH PASSWORD 'your_secure_password';"
-sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE resume_parser_db TO resume_user;"
-sudo -u postgres psql -c "ALTER USER resume_user CREATEDB;"
+sudo -u postgres psql -c "CREATE USER resume_user WITH PASSWORD 'your_secure_password';" 2>/dev/null || echo "✅ User already exists"
+sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE resume_parser_db TO resume_user;" 2>/dev/null || true
+sudo -u postgres psql -c "ALTER USER resume_user CREATEDB;" 2>/dev/null || true
 
 # Configure PostgreSQL for local connections
 echo "🔧 Configuring PostgreSQL authentication..."
-sudo tee -a /etc/postgresql/16/main/pg_hba.conf > /dev/null <<EOF
+# Check if configuration already exists
+if ! grep -q "resume_parser_db" /etc/postgresql/16/main/pg_hba.conf; then
+    sudo tee -a /etc/postgresql/16/main/pg_hba.conf > /dev/null <<EOF
 # Resume Parser local connections
 local   resume_parser_db    resume_user                    md5
 host    resume_parser_db    resume_user    127.0.0.1/32    md5
 host    resume_parser_db    resume_user    ::1/128         md5
 EOF
+    echo "✅ PostgreSQL authentication configured"
+else
+    echo "✅ PostgreSQL authentication already configured"
+fi
 
 # Restart PostgreSQL to apply changes
 sudo systemctl restart postgresql
